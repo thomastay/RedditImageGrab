@@ -42,6 +42,8 @@ subreddit and download them to a folder.
 
 ### Fixes:
 
+* `reddit.py` appended a '?' char to .json link when it shouldn't have
+
 * `--filename-format` cli arg should work as expected
 
 * `gfycat.py` failed to download direct links to .webm & .mp4 files

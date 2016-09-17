@@ -21,8 +21,7 @@ from html.parser import HTMLParser
 
 from .gfycat import gfycat
 from .reddit import getitems
-sys.path.append(os.path.join(os.path.dirname(__file__), 'imgur-downloader'))
-from imgurdownloader import ImgurDownloader, ImgurException
+from .imgur_downloader.imgurdownloader import ImgurDownloader, ImgurException
 from .parse_subreddit_list import parse_subreddit_list
 
 
