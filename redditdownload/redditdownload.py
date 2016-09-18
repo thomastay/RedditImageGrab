@@ -19,10 +19,10 @@ from os import mkdir, getcwd
 import time
 from html.parser import HTMLParser
 
-from .gfycat import gfycat
-from .reddit import getitems
-from .imgur_downloader.imgurdownloader import ImgurDownloader, ImgurException
-from .parse_subreddit_list import parse_subreddit_list
+from .plugins.gfycat import gfycat
+from .plugins.reddit import getitems
+from .plugins.imgur_downloader.imgurdownloader import ImgurDownloader, ImgurException
+from .plugins.parse_subreddit_list import parse_subreddit_list
 
 
 _log = logging.getLogger('redditdownload')
