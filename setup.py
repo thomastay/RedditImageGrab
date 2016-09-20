@@ -6,7 +6,7 @@ from setuptools import setup
 
 
 here = os.path.dirname(__file__)
-with open(os.path.join(here, 'readme.md')) as _fo:
+with open(os.path.join(here, 'README.md')) as _fo:
     LONG_DESCRIPTION = _fo.read()
 
 
