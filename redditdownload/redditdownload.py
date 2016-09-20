@@ -284,6 +284,68 @@ def history_log(wdir=os.getcwd(), log_file='log_file.txt', mode='read', write_da
         return {}
 
 
+def process_subreddit_last_id(subreddit, sort_type, dir, log_file, verbose=False):
+    """Open & update log_file to get last_id of subreddit of sort_type
+
+    :param subreddit: name of subreddit
+    :param sort_type: sort type of subreddit
+    :param dir: directory log_file (& images) will be saved to
+    :param log_file: name of log file
+    :param verbose: prints extra messages
+
+    :return: log_data (contains last ids of subreddits), last_id (for this subreddit, sort_type, & dir)
+    :rtype: tuple
+    """
+    try:
+        no_history = False
+        # first: we try to open the log_file
+        log_data = history_log(dir, log_file, 'read')
+
+        # second: we check if the data loaded is a dictionary
+        if not isinstance(log_data, dict):
+            raise WrongDataException(log_data,
+                'data from %s is not a dictionary, overwriting %s'
+                % (log_file, log_file))
+
+        # third: try loading last id for subreddit & sort_type
+        if subreddit in log_data:
+            if sort_type in log_data[subreddit]:
+                last_id = log_data[subreddit][sort_type]['last-id']
+            else: # sort_type not in log_data but subreddit is
+                no_history = True
+                log_data[subreddit][sort_type] = {'last-id': ''}
+        else: # subreddit not listed as key in log_data
+            no_history = True
+            log_data[subreddit] = {sort_type: {'last-id': ''}}
+
+    except (FileNotFoundError, IOError): # py3 or py2 exception for dne file
+        last_id = ''
+        log_data = {
+            subreddit: {
+                sort_type: {
+                    'last-id': ''
+                }
+            }
+        }
+        history_log(dir, log_file, 'write', log_data)
+        if verbose:
+            print ('%s not found in %s, created new %s'
+                % (log_file, dir, log_file))
+
+    except WrongDataException as e:
+        if verbose:
+            print('log_data:\n%s\n%s' % (e.data, e.message))
+
+    except:
+        print('-------WHAT HAPPENED IN %s PROCESSING-------?' % log_file)
+
+    if no_history:
+        last_id = ''
+        log_data = history_log(dir, log_file, 'write', log_data)
+
+    return log_data, last_id
+
+
 def parse_args(args):
     PARSER = ArgumentParser(description='Downloads files with specified extension'
                             'from the specified subreddit.')
@@ -400,57 +462,12 @@ def main(args=None):
         if ARGS.verbose:
             print ('index: %s, %s, %s' % (index, ARGS.subreddit, ARGS.dir))
 
-        # get last reddit id downloaded & resume from there unless cli --restart passed
-        try:
-            no_history = False
-            # first: we try to open the log_file
-            log_data = history_log(ARGS.dir, log_file, 'read')
-
-            # second: we check if the data loaded is a dictionary
-            if not isinstance(log_data, dict):
-                raise WrongDataException(log_data,
-                    'data from %s is not a dictionary, overwriting %s'
-                    % (log_file, log_file))
-
-            # third: try loading last id for subreddit & sort_type
-            if ARGS.subreddit in log_data:
-                if ARGS.sort_type in log_data[ARGS.subreddit]:
-                    last_id = log_data[ARGS.subreddit][ARGS.sort_type]['last-id']
-                else: # sort_type not in log_data but subreddit is
-                    no_history = True
-                    log_data[ARGS.subreddit][ARGS.sort_type] = {'last-id': ''}
-            else: # subreddit not listed as key in log_data
-                no_history = True
-                log_data[ARGS.subreddit] = {ARGS.sort_type: {'last-id': ''}}
-
-        except (FileNotFoundError, IOError): # py3 or py2 exception for dne file
-            last_id = ''
-            log_data = {
-                ARGS.subreddit: {
-                    ARGS.sort_type: {
-                        'last-id': ''
-                    }
-                }
-            }
-            history_log(ARGS.dir, log_file, 'write', log_data)
-            if ARGS.verbose:
-                print ('%s not found in %s, created new %s'
-                    % (log_file, ARGS.dir, log_file))
-
-        except WrongDataException as e:
-            if ARGS.verbose:
-                print('log_data:\n%s\n%s' % (e.data, e.message))
-
-        except:
-            print('-------WHAT HAPPENED IN %s PROCESSING-------?' % log_file)
-
-        if no_history:
-            last_id = ''
-            log_data = history_log(ARGS.dir, log_file, 'write', log_data)
+        # load last_id or create new entry for last_id in log_data
+        log_data, last_id = process_subreddit_last_id(ARGS.subreddit, ARGS.sort_type,
+                                                ARGS.dir, log_file, ARGS.dir)
 
         if ARGS.restart:
             last_id = ''
-
 
         TOTAL[0], DOWNLOADED[0], ERRORS[0], SKIPPED[0], FAILED[0], FILECOUNT = 0, 0, 0, 0, 0, 0
 
@@ -458,8 +475,6 @@ def main(args=None):
         while not FINISHED:
             if ARGS.verbose:
                 print()
-                # print('Begining ITEMS loop')
-                # print('last_id: %s' % last_id)
 
             ITEMS = getitems(
                 ARGS.subreddit, multireddit=ARGS.multireddit, previd=last_id,
