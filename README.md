@@ -16,14 +16,19 @@ subreddit and download them to a folder.
 
 * Adapted to Python 3 mostly by merge from [ohyou/RedditImageGrab](https://github.com/ohyou/RedditImageGrab) along with some additional fixes
 
-* \-\-num cli argument now counts by reddit submission rather than individual image
+* `--num n` cli argument now counts by reddit submission rather than individual image
 
     * added submodule `imgur-downloader` which enabled the above feature among other things
 
 
 * file `._history.txt` contains reddit id of last downloaded and is identified by `subreddit` & `ARGS.sort_type`, e.g.:
 
-    > {'wallpapers': {'topmonth': {'last\-id': '4x4so2'}}}
+    `{'wallpapers': {'topmonth': {'last\-id': '4x4so2'}}}`
+
+    * updated loading and writing of `last_id` to be more robust so it's possible to see something like this in a single `._history.txt` file:
+
+        `{"aww": {"hot": {"last-id": "53k7ah"}}, "pics": {"top": {"last-id": "53j9bt"}, "hot": {"last-id": "53ksj2"}}}`
+
 
 * positional argument, `<subreddit>`, can now autodetect whether value points to subreddit name or subreddit list file
 
@@ -35,6 +40,7 @@ subreddit and download them to a folder.
     * at this time, the same cli arguments are used for all subreddits in list, but save folder can be altered
 
     * examples for subreddits.txt added, in folder `subreddit-list-examples`
+
 
 * updated progress report variables such as DOWNLOADED and ERRORS to accommodate for processing a list of subreddits
 
