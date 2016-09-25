@@ -20,6 +20,7 @@ import os
 import math
 import time
 from collections import Counter
+from ...Exceptions import FileExistsException
 
 __doc__ = """
 Quickly and easily download images from Imgur.
@@ -271,7 +272,7 @@ class ImgurDownloader:
         dl, skp = 0, 0
         if os.path.isfile(path):
             skp = 1
-            raise ImgurException('%s already exists.' % path)
+            raise FileExistsException('%s already exists.' % os.path.basename(path))
         else:
             try:
                 # check if image is imgur dne image before we download anything

@@ -18,6 +18,12 @@ from os.path import (
 from os import mkdir, getcwd
 import time
 
+from .Exceptions import (
+    WrongFileTypeException,
+    FileExistsException,
+    URLDNEException,
+    WrongDataException
+)
 from .plugins.gfycat import gfycat
 from .plugins.reddit import getitems
 from .plugins.imgur_downloader.imgurdownloader import ImgurDownloader, ImgurException
@@ -54,25 +60,6 @@ def _log_wrongtype(_logfile=_WRONGDATA_LOGFILE, **kwa):
     data = json.dumps(kwa) + "\n"
     with open(_logfile, 'a', 1) as f:
         f.write(data)
-
-
-class WrongFileTypeException(Exception):
-    """Exception raised when incorrect content-type discovered"""
-
-
-class FileExistsException(Exception):
-    """Exception raised when file exists in specified directory"""
-
-
-class URLDNEException(Exception):
-    """Exception raised when URL does not exist"""
-
-
-class WrongDataException(Exception):
-    """Raised when data mismatches what's expected"""
-    def __init__(self, data, message):
-        self.data = data
-        self.message = message
 
 
 def extract_imgur_album_urls(album_url):
@@ -622,6 +609,14 @@ def main(args=None):
                             SKIPPED[0] += skp
                             FILECOUNT += 1
 
+                        except FileExistsException as ERROR:
+                            ERRORS[0] += 1
+                            if ARGS.verbose:
+                                print(ERROR.message)
+                            if ARGS.update:
+                                print('    Update complete, exiting.')
+                                FINISHED = True
+                                break
                         except ImgurException as e:
                             ERRORS[0] += 1
                         except Exception as e:
@@ -632,17 +627,12 @@ def main(args=None):
                             print('    Download num limit reached, exiting.')
                             FINISHED = True
                             break
+
                     except WrongFileTypeException as ERROR:
                         _log_wrongtype(url=URL, target_dir=ARGS.dir,
                                        filecount=FILECOUNT, _downloaded=DOWNLOADED[0],
                                        filename=FILENAME)
                         SKIPPED[0] += 1
-                    except FileExistsException as ERROR:
-                        ERRORS[0] += 1
-                        if ARGS.update:
-                            print('    Update complete, exiting.')
-                            FINISHED = True
-                            break
                     except HTTPError as ERROR:
                         FAILED[0] += 1
                     except URLError as ERROR:
