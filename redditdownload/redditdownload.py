@@ -383,6 +383,11 @@ def parse_args(args):
         # negate both argument if both argument exist
         parsed_argument.sfw = parsed_argument.nsfw = False
 
+    # set restart = True if update == True
+    if parsed_argument.update:
+        parsed_argument.restart = True
+
+
     return parsed_argument
 
 
