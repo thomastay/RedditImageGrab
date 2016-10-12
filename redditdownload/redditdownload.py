@@ -44,6 +44,8 @@ def request(url, *ar, **kwa):
         except Exception as exc:
             if _try == _retries - 1:
                 raise
+            print ("Try %r err %r  (%r)" % (
+                _try, exc, url))
         else:
             break
     return res
@@ -110,6 +112,7 @@ def download_from_url(url, dest_file):
     Attempt to download file specified by url to 'dest_file'
 
     Raises:
+
         WrongFileTypeException
 
             when content-type is not in the supported types or cannot
@@ -119,6 +122,10 @@ def download_from_url(url, dest_file):
 
             If the filename (derived from the URL) already exists in
             the destination directory.
+
+        HTTPError
+
+            ...
     """
     # Don't download files multiple times!
     if pathexists(dest_file):
@@ -126,8 +133,9 @@ def download_from_url(url, dest_file):
 
     response = request(url)
     info = response.info()
-    # with open('repsonse-info.txt', 'w') as f:
-    #     f.write(str(info))
+    actual_url = response.url
+    if actual_url == 'http://i.imgur.com/removed.png':
+        raise HTTPError(actual_url, 404, "Imgur suggests the image was removed", None, None)
 
     # Work out file type either from the response or the url.
     if 'content-type' in list(info.keys()):
@@ -206,7 +214,9 @@ def extract_urls(url):
     """
     urls = []
 
-    if 'deviantart.com' in url:
+    if 'imgur.com' in url:
+        urls = process_imgur_url(url)
+    elif 'deviantart.com' in url:
         urls = process_deviant_url(url)
     elif 'gfycat.com' in url:
         # this should handle fat.gfycat.com & zippy.gfycat.com links
@@ -214,12 +224,11 @@ def extract_urls(url):
             return [url]
 
         # choose the smallest file on gfycat
-        gfy_json = gfycat().more(url.split("gfycat.com/")[-1]).json()
-        # history_log(os.getcwd(), 'GFYCAT-JSON.txt', mode='write', write_data=gfycat_json) # debug
-        if gfy_json["mp4Size"] < gfy_json["webmSize"]:
-            urls = [gfy_json["mp4Url"]]
+        gfycat_json = gfycat().more(url.split("gfycat.com/")[-1]).json()
+        if gfycat_json["mp4Size"] < gfycat_json["webmSize"]:
+            urls = [gfycat_json["mp4Url"]]
         else:
-            urls = [gfy_json["webmUrl"]]
+            urls = [gfycat_json["webmUrl"]]
     else:
         urls = [url]
 
@@ -406,6 +415,7 @@ def main(args=None):
     ARGS = parse_args(args if len(args)>0 else sys.argv[1:])
 
     logging.basicConfig(level=logging.INFO)
+    print (parse_reddit_argument(ARGS.reddit))
 
     # value at first index is of current subreddit, second index is total
     TOTAL, DOWNLOADED, ERRORS, SKIPPED, FAILED =  [0,0], [0,0], [0,0], [0,0], [0,0]
@@ -422,6 +432,8 @@ def main(args=None):
 
     # compile reddit comment url to check if url is one of them
     reddit_comment_regex = re.compile(r'.*reddit\.com\/r\/(.*?)\/comments')
+
+    LAST = ARGS.last
 
     start_time = None
     ITEM = None
