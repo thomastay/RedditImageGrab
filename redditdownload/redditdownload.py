@@ -508,6 +508,14 @@ def main(args=None):
                         history_log(ARGS.dir, log_file, mode='write', write_data=log_data)
                     continue
 
+                # don't download if url is reddit metrics url
+                if 'redditmetrics.com' in ITEM['url']:
+                    if ARGS.verbose:
+                        print('\t%s was skipped.' % ITEM['url'])
+
+                    SKIPPED[0] += 1
+                    continue
+
                 if ITEM['score'] < ARGS.score:
                     if ARGS.verbose:
                         print('    SCORE: {} has score of {}'.format(ITEM['id'], ITEM['score']))
