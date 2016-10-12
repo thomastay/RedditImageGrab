@@ -220,7 +220,7 @@ def extract_urls(url):
         urls = process_deviant_url(url)
     elif 'gfycat.com' in url:
         # this should handle fat.gfycat.com & zippy.gfycat.com links
-        if url.endswith('.webm') or url.endswith('.mp4'):
+        if url.endswith(('.webm', '.mp4')):
             return [url]
 
         # choose the smallest file on gfycat
@@ -415,7 +415,6 @@ def main(args=None):
     ARGS = parse_args(args if len(args)>0 else sys.argv[1:])
 
     logging.basicConfig(level=logging.INFO)
-    print (parse_reddit_argument(ARGS.reddit))
 
     # value at first index is of current subreddit, second index is total
     TOTAL, DOWNLOADED, ERRORS, SKIPPED, FAILED =  [0,0], [0,0], [0,0], [0,0], [0,0]
